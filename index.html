@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>GarageVault</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14161a;
+    --card:#1e2127;
+    --card2:#262a32;
+    --accent:#f2c230;
+    --text:#eceef1;
+    --muted:#8b92a0;
+    --danger:#e5484d;
+    --warn:#ff9f45;
+    --ok:#4cd07d;
+    --border:#31353d;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;}
+  body{padding-bottom:env(safe-area-inset-bottom);min-height:100vh;}
+  ::selection{background:var(--accent);color:#14161a;}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 18px;padding-top:calc(16px + env(safe-area-inset-top));
+    background:linear-gradient(180deg,rgba(20,22,26,.98),rgba(20,22,26,.92));
+    border-bottom:1px solid var(--border);
+    backdrop-filter:blur(6px);
+  }
+  .brand{font-family:'Oswald',sans-serif;font-weight:700;font-size:19px;letter-spacing:.5px;}
+  .brand span{color:var(--accent);}
+  .iconbtn{
+    background:var(--card2);border:1px solid var(--border);color:var(--text);
+    width:38px;height:38px;border-radius:10px;font-size:16px;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* MAIN */
+  input, select, textarea{
+    background:var(--card2);border:1px solid var(--border);color:var(--text);
+    padding:13px 14px;border-radius:10px;font-size:15px;font-family:'Inter',sans-serif;width:100%;
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .btn{
+    border:none;border-radius:10px;padding:13px 16px;font-size:15px;font-weight:600;
+    font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .btn-primary{background:var(--accent);color:#14161a;}
+  .btn-primary:active{transform:scale(.98);}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+
+  #mainScreen{padding:16px;max-width:520px;margin:0 auto;}
+  #alertBanner{margin-bottom:14px;}
+  .alert{
+    background:rgba(229,72,77,.12);border:1px solid rgba(229,72,77,.4);
+    color:#ffb3b5;border-radius:12px;padding:12px 14px;font-size:13.5px;margin-bottom:8px;
+    display:flex;gap:10px;align-items:flex-start;line-height:1.4;
+  }
+  .alert.warn{background:rgba(255,159,69,.12);border-color:rgba(255,159,69,.4);color:#ffce9e;}
+  .alert b{color:inherit;}
+
+  .empty{
+    text-align:center;color:var(--muted);padding:60px 20px;font-size:14px;line-height:1.6;
+  }
+  .empty .big{font-size:34px;display:block;margin-bottom:10px;}
+
+  .vcard{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    padding:20px;margin-bottom:16px;
+  }
+  .vcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:16px;}
+  .vplate{
+    background:var(--accent);color:#14161a;font-family:'JetBrains Mono',monospace;
+    font-weight:700;letter-spacing:1.5px;padding:7px 12px;border-radius:6px;font-size:15px;
+    display:inline-block;
+  }
+  .vname{font-family:'Oswald',sans-serif;font-size:15px;color:var(--muted);margin-top:8px;font-weight:500;line-height:1.4;}
+  .statusdot{width:11px;height:11px;border-radius:50%;margin-top:7px;flex-shrink:0;}
+  .dot-ok{background:var(--ok);}
+  .dot-warn{background:var(--warn);}
+  .dot-danger{background:var(--danger);}
+
+  .vsection-label{
+    font-family:'Oswald',sans-serif;font-size:11.5px;color:var(--accent);text-transform:uppercase;
+    letter-spacing:.6px;margin:18px 0 8px;
+  }
+  .vsection-label:first-of-type{margin-top:4px;}
+
+  .doc-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:11px 0;border-top:1px solid var(--border);font-size:14px;gap:10px;
+  }
+  .doc-row .lbl{color:var(--muted);}
+  .doc-row .val{font-weight:600;text-align:right;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+  .tag{font-size:11px;padding:3px 8px;border-radius:20px;font-weight:600;white-space:nowrap;}
+  .tag-ok{background:rgba(76,208,125,.15);color:var(--ok);}
+  .tag-warn{background:rgba(255,159,69,.15);color:var(--warn);}
+  .tag-danger{background:rgba(229,72,77,.15);color:var(--danger);}
+
+  .id-row{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:9px 0;border-top:1px solid var(--border);font-size:13px;gap:10px;
+  }
+  .id-row .lbl{color:var(--muted);}
+  .id-row .val{font-family:'JetBrains Mono',monospace;font-size:12.5px;text-align:right;word-break:break-all;display:flex;align-items:center;gap:6px;}
+
+  .custom-row{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:9px 0;border-top:1px solid var(--border);font-size:13.5px;gap:14px;
+  }
+  .custom-row .lbl{color:var(--muted);flex-shrink:0;}
+  .custom-row .val{text-align:right;font-weight:500;display:flex;align-items:center;gap:6px;justify-content:flex-end;}
+
+  .fcopy{
+    background:transparent;border:none;color:var(--muted);font-size:13px;
+    padding:2px 4px;line-height:1;cursor:pointer;flex-shrink:0;
+  }
+  .fcopy:active{color:var(--accent);}
+
+  .vcard-actions{display:flex;gap:8px;margin-top:18px;}
+  .vcard-actions .btn{flex:1;padding:11px;font-size:14px;}
+
+  .drag-handle{
+    cursor:grab;touch-action:none;color:var(--muted);font-size:18px;
+    padding:4px 8px;flex-shrink:0;user-select:none;line-height:1;
+  }
+  .drag-handle:active{cursor:grabbing;}
+  [data-sortable-item].dragging{
+    opacity:.55;box-shadow:0 8px 20px rgba(0,0,0,.5);z-index:40;position:relative;
+  }
+  .vcard-drag-row{display:flex;align-items:center;gap:4px;}
+  .vcard-drag-row .vcard-top{flex:1;margin-bottom:0;}
+  .chevron-btn{
+    background:var(--card2);border:1px solid var(--border);color:var(--muted);
+    width:32px;height:32px;border-radius:8px;font-size:14px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;margin-top:2px;
+    transition:transform .2s;
+  }
+  .chevron-btn.expanded{transform:rotate(180deg);color:var(--accent);}
+
+  .fab{
+    position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom));
+    width:56px;height:56px;border-radius:50%;background:var(--accent);color:#14161a;
+    font-size:28px;border:none;box-shadow:0 6px 18px rgba(0,0,0,.4);z-index:15;
+    display:flex;align-items:center;justify-content:center;line-height:0;
+  }
+  .fab:active{transform:scale(.94);}
+
+  /* MODAL */
+  #editModal{
+    position:fixed;inset:0;background:var(--bg);z-index:30;overflow-y:auto;
+    padding:16px;padding-top:calc(16px + env(safe-area-inset-top));padding-bottom:calc(40px + env(safe-area-inset-bottom));
+  }
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+  .modal-head h2{font-family:'Oswald',sans-serif;font-size:19px;margin:0;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+  .fstatus{
+    display:inline-block;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:20px;
+    margin-top:8px;
+  }
+  .fstatus.st-ok{background:rgba(76,208,125,.15);color:var(--ok);}
+  .fstatus.st-warn{background:rgba(255,159,69,.15);color:var(--warn);}
+  .fstatus.st-danger{background:rgba(229,72,77,.15);color:var(--danger);}
+  .field input[type="date"].st-warn{border-color:var(--warn);}
+  .field input[type="date"].st-danger{border-color:var(--danger);}
+  .section-title{
+    font-family:'Oswald',sans-serif;font-size:13px;color:var(--accent);text-transform:uppercase;
+    letter-spacing:.6px;margin:22px 0 12px;padding-top:14px;border-top:1px solid var(--border);
+  }
+  .section-title:first-of-type{border-top:none;padding-top:0;margin-top:4px;}
+  .customrow-wrap{margin-bottom:12px;}
+  .customrow{display:flex;gap:8px;align-items:center;}
+  .customrow input{flex:1;}
+  .customrow input.st-warn{border-color:var(--warn);}
+  .customrow input.st-danger{border-color:var(--danger);}
+  .cf-status{margin-top:6px;margin-left:34px;}
+  .rmbtn{background:var(--card2);border:1px solid var(--border);color:var(--danger);width:44px;border-radius:10px;font-size:16px;}
+  .addcustom{background:transparent;border:1px dashed var(--border);color:var(--muted);width:100%;padding:11px;border-radius:10px;font-size:13.5px;margin-top:2px;}
+  .modal-actions{display:flex;gap:10px;margin-top:24px;}
+  .modal-actions .btn{flex:1;}
+  .btn-danger-outline{background:transparent;border:1px solid rgba(229,72,77,.4);color:var(--danger);}
+
+  .toast{
+    position:fixed;bottom:calc(92px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+    background:var(--card2);border:1px solid var(--border);color:var(--text);
+    padding:11px 18px;border-radius:30px;font-size:13.5px;z-index:50;
+    box-shadow:0 6px 20px rgba(0,0,0,.4);opacity:0;transition:opacity .25s;pointer-events:none;
+    max-width:calc(100vw - 40px);text-align:center;
+  }
+  .toast.show{opacity:1;}
+
+  .undo-toast{
+    position:fixed;bottom:calc(92px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+    background:var(--card2);border:1px solid var(--border);color:var(--text);
+    padding:9px 9px 9px 16px;border-radius:30px;font-size:13.5px;z-index:51;
+    box-shadow:0 6px 20px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .25s;
+    display:flex;align-items:center;gap:12px;max-width:calc(100vw - 40px);
+  }
+  .undo-toast.show{opacity:1;pointer-events:auto;}
+  .undo-toast span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .undo-toast button{
+    background:var(--accent);color:#14161a;border:none;border-radius:20px;
+    padding:7px 14px;font-size:13px;font-weight:700;flex-shrink:0;
+  }
+
+  .topbar-actions{display:flex;gap:8px;}
+
+  [hidden]{display:none !important;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">GARAGE<span>VAULT</span></div>
+  <div class="topbar-actions">
+    <button class="iconbtn" id="exportBtn" title="Backup: download all vehicles as a file">⬇</button>
+    <button class="iconbtn" id="importBtn" title="Restore: load vehicles from a backup file">⬆</button>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+  </div>
+</div>
+
+<!-- MAIN SCREEN -->
+<div id="mainScreen">
+  <div id="alertBanner"></div>
+  <div id="vehicleList"></div>
+</div>
+<button class="fab" id="addBtn">+</button>
+
+<!-- ADD/EDIT MODAL -->
+<div id="editModal" hidden>
+  <div class="modal-head">
+    <h2 id="modalTitle">Add Vehicle</h2>
+    <button class="iconbtn" id="closeModalBtn">✕</button>
+  </div>
+
+  <div class="section-title">Vehicle</div>
+  <button class="addcustom" id="pasteBtn" style="margin-bottom:16px;">📋 Paste details to auto-fill</button>
+  <div id="pasteBox" hidden style="margin-bottom:16px;">
+    <textarea id="pasteText" rows="6" placeholder="Paste vehicle text here, e.g.&#10;KA01AB1234&#10;Chassis No — MA1AB2XXXXX000000&#10;Engine No — ENG1234567&#10;Full Name&#10;Rg date: 01/01/2024"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="btn btn-ghost" id="pasteCancelBtn" style="flex:1;">Cancel</button>
+      <button class="btn btn-primary" id="pasteApplyBtn" style="flex:1;">Fill fields</button>
+    </div>
+  </div>
+  <div class="field"><label>Vehicle Number</label><input id="f_vno" placeholder="e.g. TS09AB1234"></div>
+  <div class="field"><label>Owner Name</label><input id="f_owner" placeholder="Owner's full name"></div>
+  <div class="field"><label>Make / Model</label><input id="f_model" placeholder="e.g. Honda Activa 6G"></div>
+  <div class="field"><label>Chassis No. (VIN)</label><input id="f_chassis" placeholder="Chassis number" style="font-family:'JetBrains Mono',monospace;"></div>
+  <div class="field"><label>Engine No.</label><input id="f_engine" placeholder="Engine number" style="font-family:'JetBrains Mono',monospace;"></div>
+
+  <div class="section-title">Documents &amp; Validity</div>
+  <div class="field"><label>Insurance Valid Upto</label><input type="date" id="f_insurance"><span class="fstatus" id="fs_insurance"></span></div>
+  <div class="field"><label>Road Tax Valid Upto</label><input type="date" id="f_roadtax"><span class="fstatus" id="fs_roadtax"></span></div>
+  <div class="field"><label>PUC (Pollution) Valid Upto</label><input type="date" id="f_puc"><span class="fstatus" id="fs_puc"></span></div>
+  <div class="field"><label>Fitness / Registration Valid Upto</label><input type="date" id="f_fitness"><span class="fstatus" id="fs_fitness"></span></div>
+
+  <div class="section-title">Other Information</div>
+  <div id="customFields"></div>
+  <button class="addcustom" id="addCustomBtn">+ Add another field</button>
+
+  <div class="modal-actions">
+    <button class="btn btn-danger-outline" id="deleteBtn" hidden>Delete</button>
+    <button class="btn btn-primary" id="saveBtn">Save Vehicle</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="undo-toast" id="undoToast">
+  <span id="undoToastMsg"></span>
+  <button id="undoBtn" type="button">Undo</button>
+</div>
+
+<script>
+/* ============================================================
+   GarageVault — local single-file vehicle document tracker
+   Records are saved as plain JSON in this browser's localStorage.
+   No passphrase, no encryption — everything lives only on this
+   device, inside this browser. Note: since this is a static page
+   whose source is public (e.g. on GitHub), anyone with access to
+   this device/browser can read the saved data via dev tools.
+   ============================================================ */
+
+const STORE_KEY = 'garagevault.blob.v1';
+let vehicles = [];
+let editingId = null;
+let customFieldCount = 0;
+let expandedIds = new Set();
+
+const $ = id => document.getElementById(id);
+
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+function loadVehicles(){
+  const raw = localStorage.getItem(STORE_KEY);
+  let parsed = null;
+  if(raw){
+    try{ parsed = JSON.parse(raw); }catch(e){ parsed = null; }
+  }
+  vehicles = Array.isArray(parsed) ? parsed : [];
+}
+function saveVehicles(){
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify(vehicles));
+    return true;
+  }catch(e){
+    console.error('GarageVault save failed:', e);
+    toast('Could not save — storage may be full or blocked');
+    return false;
+  }
+}
+
+/* ---------- Date / status helpers ---------- */
+function daysUntil(dateStr){
+  if(!dateStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(dateStr + 'T00:00:00');
+  return Math.round((d - today) / 86400000);
+}
+function statusFor(dateStr){
+  const days = daysUntil(dateStr);
+  if(days === null) return null;
+  if(days < 0) return 'danger';
+  if(days <= 30) return 'warn';
+  return 'ok';
+}
+function statusLabel(dateStr){
+  const days = daysUntil(dateStr);
+  if(days < 0) return `Expired ${Math.abs(days)}d ago`;
+  if(days === 0) return 'Expires today';
+  if(days <= 30) return `${days}d left`;
+  return 'Valid';
+}
+function fmtDate(dateStr){
+  if(!dateStr) return '—';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+const DOC_FIELDS = [
+  ['insurance', 'Insurance'],
+  ['roadtax',   'Road Tax'],
+  ['puc',       'PUC'],
+  ['fitness',   'Fitness/Reg.'],
+];
+
+function parseAnyDateISO(value){
+  if(!value) return null;
+  const iso = parseDateLoose(value);
+  if(!iso) return null;
+  const year = parseInt(iso.slice(0,4),10);
+  if(year < 1950 || year > 2100) return null;
+  const d = new Date(iso + 'T00:00:00');
+  if(isNaN(d.getTime())) return null;
+  return iso;
+}
+
+function labelImpliesDeadline(label){
+  return /valid|expiry|expires?|due|upto|up to|renewal|deadline/i.test(label || '');
+}
+
+function getAllDatedFields(v){
+  const out = [];
+  DOC_FIELDS.forEach(([key,label]) => { if(v[key]) out.push({label, iso:v[key]}); });
+  (v.custom||[]).forEach(cf => {
+    if(!labelImpliesDeadline(cf.label)) return;
+    const iso = parseAnyDateISO(cf.value);
+    if(iso) out.push({label: cf.label || 'Field', iso});
+  });
+  return out;
+}
+
+function worstStatus(v){
+  let worst = 'ok';
+  getAllDatedFields(v).forEach(({iso}) => {
+    const s = statusFor(iso);
+    if(s === 'danger') worst = 'danger';
+    else if(s === 'warn' && worst !== 'danger') worst = 'warn';
+  });
+  return worst;
+}
+
+/* ---------- Drag-to-reorder (pointer events, touch-friendly) ---------- */
+function makeSortable(container, onDrop){
+  let dragEl = null;
+  container.addEventListener('pointerdown', e => {
+    const handle = e.target.closest('.drag-handle');
+    if(!handle) return;
+    dragEl = handle.closest('[data-sortable-item]');
+    if(!dragEl) return;
+    e.preventDefault();
+    dragEl.classList.add('dragging');
+    try{ dragEl.setPointerCapture(e.pointerId); }catch(err){}
+
+    const onMove = (ev) => {
+      if(!dragEl) return;
+      const y = ev.clientY;
+      const siblings = [...container.querySelectorAll(':scope > [data-sortable-item]')].filter(el=>el!==dragEl);
+      let target = null;
+      for(const sib of siblings){
+        const rect = sib.getBoundingClientRect();
+        if(y < rect.top + rect.height/2){ target = sib; break; }
+      }
+      if(target) container.insertBefore(dragEl, target);
+      else container.appendChild(dragEl);
+    };
+    const onUp = (ev) => {
+      if(dragEl){
+        dragEl.classList.remove('dragging');
+        try{ dragEl.releasePointerCapture(ev.pointerId); }catch(err){}
+      }
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      dragEl = null;
+      if(onDrop) onDrop();
+    };
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  });
+}
+
+/* ---------- Rendering ---------- */
+function render(){
+  renderAlerts();
+  renderList();
+}
+
+function renderAlerts(){
+  const banner = $('alertBanner');
+  banner.innerHTML = '';
+  const expiredByVehicle = {}, expiringByVehicle = {};
+  vehicles.forEach(v => {
+    const name = v.vno || 'Unnamed';
+    getAllDatedFields(v).forEach(({label, iso}) => {
+      const s = statusFor(iso);
+      if(s === 'danger'){ (expiredByVehicle[name] ??= []).push(label); }
+      else if(s === 'warn'){ (expiringByVehicle[name] ??= []).push(`${label} (${statusLabel(iso)})`); }
+    });
+  });
+  const expiredCount = Object.values(expiredByVehicle).reduce((n,a)=>n+a.length,0);
+  const expiringCount = Object.values(expiringByVehicle).reduce((n,a)=>n+a.length,0);
+
+  if(expiredCount){
+    const lines = Object.entries(expiredByVehicle).map(([name,docs]) => `<b>${escapeHtml(name)}</b>: ${docs.join(', ')}`);
+    const el = document.createElement('div');
+    el.className = 'alert';
+    el.innerHTML = `<span>⛔</span><span><b>${expiredCount} document${expiredCount>1?'s':''} expired</b><br>${lines.join('<br>')}</span>`;
+    banner.appendChild(el);
+  }
+  if(expiringCount){
+    const lines = Object.entries(expiringByVehicle).map(([name,docs]) => `<b>${escapeHtml(name)}</b>: ${docs.join(', ')}`);
+    const el = document.createElement('div');
+    el.className = 'alert warn';
+    el.innerHTML = `<span>⚠️</span><span><b>${expiringCount} expiring within 30 days</b><br>${lines.join('<br>')}</span>`;
+    banner.appendChild(el);
+  }
+}
+
+function renderList(){
+  const list = $('vehicleList');
+  list.innerHTML = '';
+  if(vehicles.length === 0){
+    list.innerHTML = `<div class="empty"><span class="big">🚗</span>No vehicles yet.<br>Tap + to add your first one.</div>`;
+    return;
+  }
+  vehicles.forEach(v => {
+    const dot = worstStatus(v);
+    const card = document.createElement('div');
+    card.className = 'vcard';
+    card.setAttribute('data-sortable-item', '');
+    card.setAttribute('data-vid', v.id);
+    const isOpen = expandedIds.has(v.id);
+    card.innerHTML = `
+      <div class="vcard-drag-row">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
+        <div class="vcard-top">
+          <div>
+            <div class="vplate">${escapeHtml(v.vno || 'NO NUMBER')}</div>
+            <div class="vname">${escapeHtml(v.owner || 'No owner set')}${v.model ? ' · ' + escapeHtml(v.model) : ''}</div>
+          </div>
+          <div class="statusdot dot-${dot}"></div>
+        </div>
+        <button class="chevron-btn${isOpen ? ' expanded' : ''}" data-toggle="${v.id}" title="Show details">▾</button>
+      </div>
+
+      <div class="vcard-body" data-body="${v.id}" ${isOpen ? '' : 'hidden'}>
+        <div class="vsection-label">Documents</div>
+        ${DOC_FIELDS.map(([key,label]) => {
+          if(!v[key]) return `<div class="doc-row"><span class="lbl">${label}</span><span class="val" style="color:var(--muted);">Not set</span></div>`;
+          const s = statusFor(v[key]);
+          return `<div class="doc-row">
+            <span class="lbl">${label}</span>
+            <span class="val">${fmtDate(v[key])}<span class="tag tag-${s}">${statusLabel(v[key])}</span><button class="fcopy" data-copy-val="${escapeHtml(fmtDate(v[key]))}" title="Copy">⧉</button></span>
+          </div>`;
+        }).join('')}
+
+        ${(v.chassis || v.engine) ? `
+          <div class="vsection-label">Identification</div>
+          ${v.chassis ? `<div class="id-row"><span class="lbl">Chassis No.</span><span class="val">${escapeHtml(v.chassis)}<button class="fcopy" data-copy-val="${escapeHtml(v.chassis)}" title="Copy">⧉</button></span></div>` : ''}
+          ${v.engine ? `<div class="id-row"><span class="lbl">Engine No.</span><span class="val">${escapeHtml(v.engine)}<button class="fcopy" data-copy-val="${escapeHtml(v.engine)}" title="Copy">⧉</button></span></div>` : ''}
+        ` : ''}
+
+        ${(v.custom && v.custom.length) ? `
+          <div class="vsection-label">Other Information</div>
+          ${v.custom.map(cf => {
+            const iso = labelImpliesDeadline(cf.label) ? parseAnyDateISO(cf.value) : null;
+            const statusHtml = iso ? `<span class="tag tag-${statusFor(iso)}">${statusLabel(iso)}</span>` : '';
+            return `<div class="custom-row"><span class="lbl">${escapeHtml(cf.label || 'Field')}</span><span class="val">${escapeHtml(cf.value)}${statusHtml}<button class="fcopy" data-copy-val="${escapeHtml(cf.value)}" title="Copy">⧉</button></span></div>`;
+          }).join('')}
+        ` : ''}
+
+        <div class="vcard-actions">
+          <button class="btn btn-ghost" data-copy="${v.id}">Copy</button>
+          <button class="btn btn-ghost" data-edit="${v.id}">Edit</button>
+        </div>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+  list.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.onclick = () => openModal(btn.dataset.edit);
+  });
+  list.querySelectorAll('[data-copy]').forEach(btn => {
+    btn.onclick = () => copyVehicle(btn.dataset.copy);
+  });
+  list.querySelectorAll('[data-copy-val]').forEach(btn => {
+    btn.onclick = (e) => { e.stopPropagation(); copyText(btn.dataset.copyVal); };
+  });
+  list.querySelectorAll('[data-toggle]').forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.dataset.toggle;
+      if(expandedIds.has(id)) expandedIds.delete(id); else expandedIds.add(id);
+      const body = list.querySelector(`[data-body="${id}"]`);
+      body.hidden = !expandedIds.has(id);
+      btn.classList.toggle('expanded', expandedIds.has(id));
+    };
+  });
+}
+
+async function copyText(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    toast('Copied');
+  }catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); toast('Copied'); }
+    catch(e2){ toast('Could not copy — select and copy manually'); }
+    document.body.removeChild(ta);
+  }
+}
+
+function vehicleToText(v){
+  const lines = [];
+  lines.push(v.vno || 'Vehicle');
+  if(v.owner) lines.push(`Owner: ${v.owner}`);
+  if(v.model) lines.push(`Model: ${v.model}`);
+  if(v.chassis) lines.push(`Chassis No: ${v.chassis}`);
+  if(v.engine) lines.push(`Engine No: ${v.engine}`);
+  DOC_FIELDS.forEach(([key,label]) => {
+    if(v[key]) lines.push(`${label} Valid Upto: ${fmtDate(v[key])}`);
+  });
+  (v.custom || []).forEach(cf => {
+    if(cf.label || cf.value) lines.push(`${cf.label || 'Field'}: ${cf.value}`);
+  });
+  return lines.join('\n');
+}
+
+async function copyVehicle(id){
+  const v = vehicles.find(x=>x.id===id);
+  if(!v) return;
+  await copyText(vehicleToText(v));
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str ?? '';
+  return d.innerHTML;
+}
+
+/* ---------- Modal (add/edit) ---------- */
+function openModal(id){
+  editingId = id || null;
+  const v = editingId ? vehicles.find(x=>x.id===editingId) : null;
+
+  $('modalTitle').textContent = v ? 'Edit Vehicle' : 'Add Vehicle';
+  $('f_vno').value = v?.vno || '';
+  $('f_owner').value = v?.owner || '';
+  $('f_model').value = v?.model || '';
+  $('f_chassis').value = v?.chassis || '';
+  $('f_engine').value = v?.engine || '';
+  $('f_insurance').value = v?.insurance || '';
+  $('f_roadtax').value = v?.roadtax || '';
+  $('f_puc').value = v?.puc || '';
+  $('f_fitness').value = v?.fitness || '';
+  $('deleteBtn').hidden = !v;
+
+  $('customFields').innerHTML = '';
+  customFieldCount = 0;
+  (v?.custom || []).forEach(cf => addCustomRow(cf.label, cf.value));
+
+  $('pasteBox').hidden = true;
+  $('pasteText').value = '';
+
+  refreshFieldStatuses();
+  $('editModal').hidden = false;
+}
+
+const DOC_INPUT_IDS = [
+  ['f_insurance', 'fs_insurance'],
+  ['f_roadtax',   'fs_roadtax'],
+  ['f_puc',       'fs_puc'],
+  ['f_fitness',   'fs_fitness'],
+];
+
+function refreshFieldStatuses(){
+  DOC_INPUT_IDS.forEach(([inputId, badgeId]) => {
+    const input = $(inputId), badge = $(badgeId);
+    const dateVal = input.value;
+    input.classList.remove('st-warn','st-danger');
+    if(!dateVal){ badge.textContent = ''; badge.className = 'fstatus'; return; }
+    const s = statusFor(dateVal);
+    badge.textContent = statusLabel(dateVal);
+    badge.className = `fstatus st-${s}`;
+    if(s === 'warn' || s === 'danger') input.classList.add(`st-${s}`);
+  });
+}
+
+DOC_INPUT_IDS.forEach(([inputId]) => {
+  $(inputId).addEventListener('input', refreshFieldStatuses);
+  $(inputId).addEventListener('change', refreshFieldStatuses);
+});
+
+function addCustomRow(label='', value=''){
+  customFieldCount++;
+  const wrap = document.createElement('div');
+  wrap.className = 'customrow-wrap';
+  wrap.setAttribute('data-sortable-item', '');
+  wrap.innerHTML = `
+    <div class="customrow">
+      <span class="drag-handle" title="Drag to reorder">⠿</span>
+      <input placeholder="Label (e.g. Loan No.)" class="cf-label" value="${escapeHtml(label)}">
+      <input placeholder="Value" class="cf-value" value="${escapeHtml(value)}">
+      <button class="rmbtn" type="button">✕</button>
+    </div>
+    <span class="fstatus cf-status" hidden></span>
+  `;
+  wrap.querySelector('.rmbtn').onclick = () => wrap.remove();
+  const labelInput = wrap.querySelector('.cf-label');
+  const valueInput = wrap.querySelector('.cf-value');
+  const update = () => updateCustomFieldStatus(wrap);
+  labelInput.addEventListener('input', update);
+  labelInput.addEventListener('change', update);
+  valueInput.addEventListener('input', update);
+  valueInput.addEventListener('change', update);
+  $('customFields').appendChild(wrap);
+  update();
+}
+
+function updateCustomFieldStatus(wrap){
+  const labelInput = wrap.querySelector('.cf-label');
+  const valueInput = wrap.querySelector('.cf-value');
+  const badge = wrap.querySelector('.cf-status');
+  valueInput.classList.remove('st-warn','st-danger');
+  const iso = labelImpliesDeadline(labelInput.value) ? parseAnyDateISO(valueInput.value) : null;
+  if(!iso){ badge.hidden = true; badge.className = 'fstatus cf-status'; return; }
+  const s = statusFor(iso);
+  badge.textContent = statusLabel(iso);
+  badge.className = `fstatus cf-status st-${s}`;
+  badge.hidden = false;
+  if(s === 'warn' || s === 'danger') valueInput.classList.add(`st-${s}`);
+}
+makeSortable(document.getElementById('customFields'), null);
+
+/* ---------- Paste-to-fill parser ---------- */
+$('pasteBtn').onclick = () => { $('pasteBox').hidden = false; $('pasteText').focus(); };
+$('pasteCancelBtn').onclick = () => { $('pasteBox').hidden = true; $('pasteText').value=''; };
+
+function parseDateLoose(str){
+  // matches 24/06/2023, 24-06-2023, 24/06//2023 (stray slash), 2023-06-24
+  const m = str.match(/(\d{4})-(\d{1,2})-(\d{1,2})/) ;
+  if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  const m2 = str.match(/(\d{1,2})\D{1,2}(\d{1,2})\D{1,2}(\d{4})/);
+  if(m2) return `${m2[3]}-${m2[2].padStart(2,'0')}-${m2[1].padStart(2,'0')}`;
+  return '';
+}
+
+function lastPart(line){
+  const parts = line.split(/[:]+/).map(s=>s.trim()).filter(Boolean);
+  return parts[parts.length-1];
+}
+
+function parsePastedDetails(text){
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const out = { vno:'', owner:'', chassis:'', engine:'', regDate:'',
+    insurance:'', roadtax:'', puc:'', fitness:'', extras:[] };
+  const plateRe = /\b[A-Z]{2}\s?-?\d{1,2}\s?-?[A-Z]{0,3}\s?-?\d{3,4}\b/i;
+
+  lines.forEach(line => {
+    const lower = line.toLowerCase();
+    const dateInLine = parseDateLoose(line);
+
+    if(/chassis/.test(lower)){
+      out.chassis = lastPart(line).replace(/chassis no\.?/i,'').trim();
+    } else if(/engine/.test(lower)){
+      out.engine = lastPart(line).replace(/engine no\.?/i,'').trim();
+    } else if(/insurance valid upto|insurance.*valid to/.test(lower) && dateInLine){
+      out.insurance = dateInLine;
+    } else if(/insurance company/.test(lower)){
+      out.extras.push({label:'Insurance Company', value: lastPart(line)});
+    } else if(/puc.*valid to|puc.*valid upto/.test(lower) && dateInLine){
+      out.puc = dateInLine;
+    } else if(/puc certification/.test(lower)){
+      out.extras.push({label:'PUC Certificate No', value: lastPart(line)});
+    } else if(/^tax\b/.test(lower) && dateInLine){
+      out.roadtax = dateInLine;
+    } else if((/regn\.?\s*valid upto|registration.*valid upto|certificate.*expire|fc.*valid/.test(lower)) && dateInLine){
+      out.fitness = dateInLine;
+    } else if(/permit valid upto/.test(lower) && dateInLine){
+      out.extras.push({label:'Permit Valid Upto', value: dateInLine});
+    } else if(/\b(rg|reg|registration)\b.*date/.test(lower) || /^date of registration/.test(lower)){
+      if(dateInLine) out.regDate = dateInLine;
+    } else if(/^father'?s name/.test(lower)){
+      out.extras.push({label:"Father's Name", value: lastPart(line)});
+    } else if(/maker'?s? name|maker'?s class/.test(lower)){
+      out.extras.push({label:'Make', value: lastPart(line)});
+    } else if(plateRe.test(line.replace(/\s/g,'')) && !out.vno){
+      out.vno = line.replace(/\s/g,'').toUpperCase();
+    } else if(!/[:—–-]/.test(line) && /^[a-zA-Z .]+$/.test(line) && line.split(' ').length <= 5 && !out.owner){
+      out.owner = line;
+    }
+  });
+  return out;
+}
+
+$('pasteApplyBtn').onclick = () => {
+  const parsed = parsePastedDetails($('pasteText').value);
+  if(parsed.vno) $('f_vno').value = parsed.vno;
+  if(parsed.owner) $('f_owner').value = parsed.owner;
+  if(parsed.chassis) $('f_chassis').value = parsed.chassis;
+  if(parsed.engine) $('f_engine').value = parsed.engine;
+  if(parsed.insurance) $('f_insurance').value = parsed.insurance;
+  if(parsed.roadtax) $('f_roadtax').value = parsed.roadtax;
+  if(parsed.puc) $('f_puc').value = parsed.puc;
+  if(parsed.fitness) $('f_fitness').value = parsed.fitness;
+  if(parsed.regDate) addCustomRow('Registration Date', parsed.regDate);
+  (parsed.extras || []).forEach(ex => addCustomRow(ex.label, ex.value));
+  refreshFieldStatuses();
+  $('pasteBox').hidden = true;
+  $('pasteText').value = '';
+  toast('Fields filled — check them before saving');
+};
+
+$('addCustomBtn').onclick = () => addCustomRow();
+$('addBtn').onclick = () => openModal(null);
+$('closeModalBtn').onclick = () => { $('editModal').hidden = true; };
+
+$('saveBtn').onclick = async () => {
+  const vno = $('f_vno').value.trim();
+  if(!vno){ toast('Vehicle number is required'); $('f_vno').focus(); return; }
+
+  const custom = [...$('customFields').querySelectorAll('.customrow')]
+    .map(row => ({
+      label: row.querySelector('.cf-label').value.trim(),
+      value: row.querySelector('.cf-value').value.trim()
+    }))
+    .filter(cf => cf.label || cf.value);
+
+  const data = {
+    id: editingId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+    vno, owner: $('f_owner').value.trim(), model: $('f_model').value.trim(),
+    chassis: $('f_chassis').value.trim(), engine: $('f_engine').value.trim(),
+    insurance: $('f_insurance').value, roadtax: $('f_roadtax').value,
+    puc: $('f_puc').value, fitness: $('f_fitness').value,
+    custom
+  };
+
+  if(editingId){
+    const idx = vehicles.findIndex(x=>x.id===editingId);
+    vehicles[idx] = data;
+  } else {
+    vehicles.push(data);
+  }
+
+  await saveVehicles();
+  $('editModal').hidden = true;
+  render();
+  toast('Saved');
+};
+
+let lastDeleted = null;
+let undoTimeoutId = null;
+
+function deleteVehicleById(id){
+  const idx = vehicles.findIndex(x=>x.id===id);
+  if(idx === -1) return;
+  const [removed] = vehicles.splice(idx, 1);
+  saveVehicles();
+  render();
+  lastDeleted = { vehicle: removed, index: idx };
+  showUndoToast(`Deleted ${removed.vno || 'vehicle'}`);
+}
+
+function showUndoToast(msg){
+  clearTimeout(undoTimeoutId);
+  $('undoToastMsg').textContent = msg;
+  $('undoToast').classList.add('show');
+  undoTimeoutId = setTimeout(() => {
+    $('undoToast').classList.remove('show');
+    lastDeleted = null;
+  }, 5000);
+}
+
+$('undoBtn').onclick = () => {
+  if(!lastDeleted) return;
+  clearTimeout(undoTimeoutId);
+  const { vehicle, index } = lastDeleted;
+  vehicles.splice(Math.min(index, vehicles.length), 0, vehicle);
+  saveVehicles();
+  render();
+  lastDeleted = null;
+  $('undoToast').classList.remove('show');
+  toast('Restored');
+};
+
+$('deleteBtn').onclick = () => {
+  if(!editingId) return;
+  const id = editingId;
+  $('editModal').hidden = true;
+  deleteVehicleById(id);
+};
+
+/* ---------- Backup / Restore ---------- */
+$('exportBtn').onclick = () => {
+  if(!vehicles.length){ toast('No vehicles to back up yet'); return; }
+  const stamp = new Date().toISOString().slice(0,10);
+  const blob = new Blob([JSON.stringify(vehicles, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `garagevault-backup-${stamp}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Backup downloaded');
+};
+
+$('importBtn').onclick = () => $('importFile').click();
+
+$('importFile').onchange = async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    if(!Array.isArray(parsed)) throw new Error('Backup file is not a vehicle list');
+    const valid = parsed.filter(v => v && typeof v === 'object' && v.vno);
+    if(!valid.length){ toast('No valid vehicles found in that file'); e.target.value = ''; return; }
+
+    const proceed = confirm(`Import ${valid.length} vehicle(s)? Existing vehicles with matching IDs will be updated; the rest will be added.`);
+    if(!proceed){ e.target.value = ''; return; }
+
+    valid.forEach(imp => {
+      if(!imp.id) imp.id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random()));
+      const idx = vehicles.findIndex(x=>x.id===imp.id);
+      if(idx >= 0) vehicles[idx] = imp; else vehicles.push(imp);
+    });
+    saveVehicles();
+    render();
+    toast(`Imported ${valid.length} vehicle(s)`);
+  }catch(err){
+    console.error('Import failed:', err);
+    toast('Could not read that file — is it a GarageVault backup?');
+  }
+  e.target.value = '';
+};
+
+/* ---------- Boot ---------- */
+loadVehicles();
+render();
+
+makeSortable($('vehicleList'), () => {
+  const newOrderIds = [...$('vehicleList').querySelectorAll('[data-sortable-item]')].map(el => el.dataset.vid);
+  vehicles.sort((a,b) => newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id));
+  saveVehicles();
+});
+
+window.addEventListener('error', (e) => {
+  console.error('GarageVault error:', e.error || e.message);
+  try{ toast('Something went wrong — your data is safe, try again'); }catch(_){}
+});
+</script>
+</body>
+</html>
